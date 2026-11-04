@@ -1,0 +1,231 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Test of Sequence</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #0c0b12;
+  color: #f3e9d9;
+  font-family: Georgia, serif;
+  text-align: center;
+}
+h1 { color: #e6b9ec; margin: 20px 0 8px; }
+p { line-height: 1.5; }
+#map {
+  position: relative;
+  width: min(95vw, 750px);
+  margin: 20px auto;
+}
+#map img { display: block; width: 100%; }
+.door {
+  position: absolute;
+  width: 13%;
+  height: 15%;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.door:hover, .door:focus-visible {
+  border-color: #e79cf5;
+  background: #df80ed33;
+  outline: none;
+}
+.door.selected {
+  border-color: #79d4ff;
+  background: #60bfff44;
+}
+#panel {
+  max-width: 750px;
+  margin: 20px auto;
+  padding: 12px;
+}
+#panel img {
+  display: block;
+  max-width: 100%;
+  max-height: 65vh;
+  margin: 15px auto;
+  object-fit: contain;
+}
+#symbolButton {
+  display: block;
+  position: relative;
+  width: fit-content;
+  margin: auto;
+  padding: 0;
+  border: 2px solid #dca5ee;
+  background: transparent;
+  cursor: pointer;
+}
+#symbolButton img { margin: 0; }
+#symbolButton::after {
+  content: "✧";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  color: #f3b2ff;
+  text-shadow: 0 0 18px #fa8cff;
+  pointer-events: none;
+}
+button.action {
+  background: #352044;
+  border: 1px solid #b97bcb;
+  border-radius: 7px;
+  color: white;
+  padding: 12px 20px;
+  margin: 8px;
+  cursor: pointer;
+  font: inherit;
+}
+button.action:hover { background: #573267; }
+[hidden] { display: none !important; }
+#message { color: #e6b9ec; min-height: 24px; }
+</style>
+</head>
+<body>
+<h1>The Test of Sequence</h1>
+<p id="instruction">
+  Retrace your journey, and tell your story.
+</p>
+
+<section id="roomView">
+  <div id="map">
+    <img src="images/room.png" alt="The chamber">
+    <button class="door" data-door="1"
+      style="left:8%;top:25%" aria-label="Left upper door"></button>
+    <button class="door" data-door="2"
+      style="left:8%;top:48%" aria-label="Left middle door"></button>
+    <button class="door" data-door="3"
+      style="left:8%;top:71%" aria-label="Left lower door"></button>
+    <button class="door" data-door="4"
+      style="left:79%;top:25%" aria-label="Right upper door"></button>
+    <button class="door" data-door="5"
+      style="left:79%;top:48%" aria-label="Right middle door"></button>
+    <button class="door" data-door="6"
+      style="left:79%;top:71%" aria-label="Right lower door"></button>
+  </div>
+  <p id="progress">Sequence: 0 / 6</p>
+  <p id="message" aria-live="polite"></p>
+  <button class="action" onclick="resetPuzzle()">Reset sequence</button>
+</section>
+
+<section id="panel" hidden>
+  <div id="doorView">
+    <h2>A Door of Memory</h2>
+    <p>A strange symbol glows upon the door.</p>
+    <button id="symbolButton" onclick="showMemory()"
+      aria-label="Touch the glowing symbol">
+      <img id="doorImage" alt="A mysterious door">
+    </button>
+    <p>Touch the symbol to reveal what lies beyond.</p>
+  </div>
+  <div id="memoryView" hidden>
+    <h2>A Vision</h2>
+    <img id="memoryImage" alt="A vision from the party's journey">
+    <button class="action" onclick="chooseDoor()">
+      Choose this door
+    </button>
+  </div>
+  <button class="action" onclick="showRoom()">
+    Return to chamber
+  </button>
+</section>
+
+<script>
+// Each number corresponds to the door's physical position.
+// Change this array to the correct reverse-chronological order.
+const correctOrder = [4, 2, 6, 1, 5, 3];
+
+let selected = [];
+let activeDoor = null;
+
+const roomView = document.getElementById("roomView");
+const panel = document.getElementById("panel");
+const doorView = document.getElementById("doorView");
+const memoryView = document.getElementById("memoryView");
+const message = document.getElementById("message");
+
+document.querySelectorAll(".door").forEach(button => {
+  button.addEventListener("click", () => {
+    openDoor(Number(button.dataset.door));
+  });
+});
+
+function openDoor(number) {
+  activeDoor = number;
+  roomView.hidden = true;
+  panel.hidden = false;
+  doorView.hidden = false;
+  memoryView.hidden = true;
+  document.getElementById("doorImage").src =
+    `images/door${number}.png`;
+}
+
+function showMemory() {
+  doorView.hidden = true;
+  memoryView.hidden = false;
+  document.getElementById("memoryImage").src =
+    `images/memory${activeDoor}.png`;
+}
+
+function showRoom() {
+  roomView.hidden = false;
+  panel.hidden = true;
+}
+
+function chooseDoor() {
+  showRoom();
+
+  if (selected.includes(activeDoor)) {
+    message.textContent = "This memory has already been chosen.";
+    return;
+  }
+
+  if (activeDoor !== correctOrder[selected.length]) {
+    selected = [];
+    message.textContent =
+      "The crystal flickers. The sequence is broken. Begin again.";
+  } else {
+    selected.push(activeDoor);
+    message.textContent = "The crystal pulses with blue light.";
+  }
+
+  updateMap();
+
+  if (selected.length === 6) {
+    message.textContent =
+      "Presence of mind confirmed. Access granted.";
+    document.getElementById("instruction").textContent =
+      "The great metal door unlocks with a thunderous click.";
+  }
+}
+
+function updateMap() {
+  document.getElementById("progress").textContent =
+    `Sequence: ${selected.length} / 6`;
+
+  document.querySelectorAll(".door").forEach(button => {
+    button.classList.toggle(
+      "selected",
+      selected.includes(Number(button.dataset.door))
+    );
+  });
+}
+
+function resetPuzzle() {
+  selected = [];
+  message.textContent = "";
+  document.getElementById("instruction").textContent =
+    "Retrace your journey, and tell your story.";
+  updateMap();
+}
+</script>
+</body>
+</html>
