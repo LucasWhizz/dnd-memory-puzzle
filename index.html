@@ -4,13 +4,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>The Test of Sequence</title>
 
 <style>
-
-/* GENERAL STYLING */
-
 * {
   box-sizing: border-box;
 }
@@ -66,20 +62,16 @@ p {
   left: 50%;
   top: 38%;
   transform: translate(-50%, -50%);
-
   color: #ff9aeb;
   font-size: clamp(18px, 3vw, 30px);
   font-weight: bold;
-
   text-shadow:
     0 0 6px #ff69db,
     0 0 15px #f049d5,
     0 0 25px #e038cc;
-
   white-space: nowrap;
   pointer-events: none;
   z-index: 5;
-
   opacity: 0;
   transition: opacity 1s ease-in-out;
 }
@@ -135,31 +127,25 @@ button.fantasy-button {
   display: inline-block;
   margin: 20px 8px;
   padding: 13px 30px;
-
   background: linear-gradient(
     180deg,
     #513725 0%,
     #302016 50%,
     #21150f 100%
   );
-
   color: #f0d5a0;
   border: 2px solid #b89253;
   border-radius: 5px;
-
   box-shadow:
     inset 0 0 0 2px #28190f,
     inset 0 2px 8px #8b603b,
     0 5px 15px #0009;
-
   font-family: Georgia, serif;
   font-size: 19px;
   font-variant: small-caps;
   letter-spacing: 2px;
-
   text-shadow: 1px 1px 3px #000;
   cursor: pointer;
-
   transition:
     box-shadow 0.3s ease,
     background 0.3s ease,
@@ -185,12 +171,10 @@ button.fantasy-button:hover {
     #402b1b,
     #302016
   );
-
   box-shadow:
     inset 0 0 0 2px #28190f,
     0 0 16px #d5a65c88,
     0 5px 15px #0009;
-
   transform: translateY(-2px);
 }
 
@@ -198,16 +182,7 @@ button.fantasy-button:active {
   transform: translateY(1px);
 }
 
-/* SUCCESS MESSAGE */
-
-#successMessage {
-  color: #f2b5ff;
-  font-size: 22px;
-  text-shadow: 0 0 12px #e86bfa;
-  margin: 20px auto;
-}
-
-/* CINEMATIC FADE TRANSITION */
+/* FADE OVERLAY */
 
 #fadeOverlay {
   position: fixed;
@@ -224,16 +199,67 @@ button.fantasy-button:active {
   pointer-events: all;
 }
 
+/* FINAL SEQUENCE SCREEN */
+
+#finalScreen {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+}
+
+/* GLOWING PINK MESSAGE */
+
+#finalMessage {
+  max-width: 850px;
+  color: #ff9aeb;
+  font-size: clamp(24px, 4vw, 38px);
+  font-weight: bold;
+  line-height: 1.6;
+  text-align: center;
+
+  text-shadow:
+    0 0 8px #ff69db,
+    0 0 20px #f049d5,
+    0 0 35px #e038cc;
+
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+}
+
+#finalMessage.visible {
+  opacity: 1;
+}
+
+/* FINAL FOG IMAGE */
+
+#fogScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #000;
+}
+
+#fogScreen img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 [hidden] {
   display: none !important;
 }
-
 </style>
 </head>
 
 <body>
 
-<!-- FADE OVERLAY -->
+<!-- CINEMATIC FADE OVERLAY -->
 
 <div id="fadeOverlay"></div>
 
@@ -244,8 +270,6 @@ button.fantasy-button:active {
   <div id="map">
 
     <img src="images/room.png" alt="The chamber">
-
-    <!-- CRYSTAL COUNTER -->
 
     <div id="crystalCounter" aria-live="polite"></div>
 
@@ -285,17 +309,11 @@ button.fantasy-button:active {
 
   </div>
 
-  <div id="successMessage" hidden>
-    Presence of mind confirmed. Access granted.
-  </div>
-
 </section>
 
 <!-- DOOR AND MEMORY SCREENS -->
 
 <section id="panel" hidden>
-
-  <!-- DOOR IMAGE -->
 
   <div id="doorView">
 
@@ -311,8 +329,6 @@ button.fantasy-button:active {
     </button>
 
   </div>
-
-  <!-- MEMORY IMAGE -->
 
   <div id="memoryView" hidden>
 
@@ -331,43 +347,62 @@ button.fantasy-button:active {
 
   </div>
 
-  <!-- RETURN BUTTON FOR DOOR VIEW -->
-
   <div id="doorReturn">
+
     <button class="fantasy-button" onclick="showRoom()">
       Return
     </button>
+
   </div>
+
+</section>
+
+<!-- FINAL SUCCESS MESSAGE -->
+
+<section id="finalScreen" hidden>
+
+  <div id="finalMessage">
+    Sequence confirmed. Do you want to enter the lobby
+    of the Cannith Vault or travel elsewhere through
+    the veil?
+  </div>
+
+</section>
+
+<!-- FINAL WALL OF FOG -->
+
+<section id="fogScreen" hidden>
+
+  <img src="images/fog.png"
+    alt="A mysterious wall of swirling fog">
 
 </section>
 
 <script>
 
 // ==================================================
-// CORRECT SEQUENCE
+// PUZZLE CONFIGURATION
 // ==================================================
 
 const correctOrder = [6, 4, 3, 1, 5, 2];
 
-// ==================================================
-// DOOR DESCRIPTIONS
-// ==================================================
-
 const doorDescriptions = {
-
   1: "A wooden door with the symbol of a Tigers Head. Do you remember?",
-
   2: "A wooden door with the symbol of a Robotic Arm. Do you remember?",
-
   3: "A wooden door with the symbol of a Bow. Do you remember?",
-
   4: "A wooden door with the symbol of a Bear. Do you remember?",
-
   5: "A wooden door with the symbol of a PickAxe. Do you remember?",
-
   6: "A wooden door with the symbol of a Crystal. Do you remember?"
-
 };
+
+// ==================================================
+// TIMING SETTINGS (MILLISECONDS)
+// ==================================================
+
+const fadeDuration = 600;
+const counterDuration = 6000;
+const finalMessageDuration = 10000;
+const finalMessageFade = 1500;
 
 // ==================================================
 // PUZZLE STATE
@@ -379,25 +414,33 @@ let puzzleComplete = false;
 let transitioning = false;
 let counterTimer = null;
 
+// ==================================================
+// ELEMENTS
+// ==================================================
+
 const roomView = document.getElementById("roomView");
 const panel = document.getElementById("panel");
 const doorView = document.getElementById("doorView");
 const memoryView = document.getElementById("memoryView");
+const doorReturn = document.getElementById("doorReturn");
 
 const crystalCounter =
   document.getElementById("crystalCounter");
 
-const successMessage =
-  document.getElementById("successMessage");
-
-const doorReturn =
-  document.getElementById("doorReturn");
-
 const fadeOverlay =
   document.getElementById("fadeOverlay");
 
+const finalScreen =
+  document.getElementById("finalScreen");
+
+const finalMessage =
+  document.getElementById("finalMessage");
+
+const fogScreen =
+  document.getElementById("fogScreen");
+
 // ==================================================
-// DOOR CLICK HANDLERS
+// CLICK HANDLERS
 // ==================================================
 
 document.querySelectorAll(".door").forEach(button => {
@@ -409,7 +452,7 @@ document.querySelectorAll(".door").forEach(button => {
 });
 
 // ==================================================
-// OPEN DOOR IMAGE
+// OPEN DOOR
 // ==================================================
 
 function openDoor(number) {
@@ -437,7 +480,7 @@ function openDoor(number) {
 }
 
 // ==================================================
-// SHOW MEMORY
+// REVEAL MEMORY
 // ==================================================
 
 function showMemory() {
@@ -454,7 +497,7 @@ function showMemory() {
 }
 
 // ==================================================
-// DISPLAY COUNTER FOR SIX SECONDS
+// DISPLAY CRYSTAL COUNTER
 // ==================================================
 
 function displayCounter(text) {
@@ -462,22 +505,23 @@ function displayCounter(text) {
   clearTimeout(counterTimer);
 
   crystalCounter.textContent = text;
-
   crystalCounter.classList.add("visible");
 
   counterTimer = setTimeout(() => {
+
     crystalCounter.classList.remove("visible");
-  }, 6000);
+
+  }, counterDuration);
 
 }
 
 // ==================================================
-// FADE BACK TO MAIN ROOM
+// NORMAL RETURN TO MAIN ROOM
 // ==================================================
 
 function showRoom(counterText = null) {
 
-  if (transitioning) return;
+  if (transitioning || puzzleComplete) return;
 
   transitioning = true;
 
@@ -498,14 +542,14 @@ function showRoom(counterText = null) {
         displayCounter(counterText);
       }
 
-    }, 600);
+    }, fadeDuration);
 
-  }, 600);
+  }, fadeDuration);
 
 }
 
 // ==================================================
-// ENTER THE SELECTED DOOR
+// ENTER SELECTED DOOR
 // ==================================================
 
 function enterDoor() {
@@ -514,33 +558,109 @@ function enterDoor() {
 
   const expectedDoor = correctOrder[selected.length];
 
-  let counterText;
-
   if (activeDoor === expectedDoor) {
+
+    // CORRECT DOOR
 
     selected.push(activeDoor);
 
-    counterText = `${selected.length}/6`;
-
     if (selected.length === 6) {
 
+      // ALL SIX CORRECT
       puzzleComplete = true;
 
-      counterText = "6/6";
-
-      successMessage.hidden = false;
+      startFinalSequence();
+      return;
 
     }
 
+    showRoom(`${selected.length}/6`);
+
   } else {
+
+    // INCORRECT DOOR
 
     selected = [];
 
-    counterText = "Recall... 0/6";
+    showRoom("Recall... 0/6");
 
   }
 
-  showRoom(counterText);
+}
+
+// ==================================================
+// FINAL CINEMATIC SEQUENCE
+// ==================================================
+
+function startFinalSequence() {
+
+  transitioning = true;
+
+  clearTimeout(counterTimer);
+  crystalCounter.classList.remove("visible");
+
+  // STEP 1: FADE MEMORY SCREEN TO BLACK
+
+  fadeOverlay.classList.add("active");
+
+  setTimeout(() => {
+
+    // STEP 2: SWITCH TO BLACK MESSAGE SCREEN
+
+    roomView.hidden = true;
+    panel.hidden = true;
+    finalScreen.hidden = false;
+
+    // Remove overlay to reveal black screen
+    fadeOverlay.classList.remove("active");
+
+    // Allow the browser to render the new screen
+    requestAnimationFrame(() => {
+
+      requestAnimationFrame(() => {
+
+        // STEP 3: FADE IN PINK MESSAGE
+
+        finalMessage.classList.add("visible");
+
+      });
+
+    });
+
+    // STEP 4: WAIT 10 SECONDS
+
+    setTimeout(() => {
+
+      // Fade the message away
+      finalMessage.classList.remove("visible");
+
+      setTimeout(() => {
+
+        // STEP 5: FADE TO BLACK AGAIN
+
+        fadeOverlay.classList.add("active");
+
+        setTimeout(() => {
+
+          // STEP 6: SHOW WALL OF FOG
+
+          finalScreen.hidden = true;
+          fogScreen.hidden = false;
+
+          // Fade black overlay away
+          fadeOverlay.classList.remove("active");
+
+          setTimeout(() => {
+            transitioning = false;
+          }, fadeDuration);
+
+        }, fadeDuration);
+
+      }, finalMessageFade);
+
+    }, finalMessageDuration);
+
+  }, fadeDuration);
 
 }
 
