@@ -8,6 +8,9 @@
 <title>The Test of Sequence</title>
 
 <style>
+
+/* GENERAL STYLING */
+
 * {
   box-sizing: border-box;
 }
@@ -61,7 +64,7 @@ p {
   outline: none;
 }
 
-/* CRYSTAL COUNTER */
+/* PINK CRYSTAL COUNTER */
 
 #crystalCounter {
   position: absolute;
@@ -81,9 +84,16 @@ p {
   white-space: nowrap;
   pointer-events: none;
   z-index: 5;
+
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
 }
 
-/* DOOR / MEMORY SCREEN */
+#crystalCounter.visible {
+  opacity: 1;
+}
+
+/* DOOR AND MEMORY SCREENS */
 
 #panel {
   max-width: 750px;
@@ -99,11 +109,10 @@ p {
   object-fit: contain;
 }
 
-/* CLICKABLE SYMBOL IMAGE */
+/* CLICKABLE SYMBOL */
 
 #symbolButton {
   display: block;
-  position: relative;
   width: fit-content;
   margin: auto;
   padding: 0;
@@ -116,7 +125,7 @@ p {
   margin: 0;
 }
 
-/* BUTTONS */
+/* ACTION BUTTONS */
 
 button.action {
   background: #352044;
@@ -151,6 +160,23 @@ button.enter:hover {
   margin: 20px auto;
 }
 
+/* CINEMATIC FADE TRANSITION */
+
+#fadeOverlay {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9999;
+  transition: opacity 0.6s ease-in-out;
+}
+
+#fadeOverlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
 [hidden] {
   display: none !important;
 }
@@ -159,6 +185,10 @@ button.enter:hover {
 </head>
 
 <body>
+
+<!-- FADE OVERLAY -->
+
+<div id="fadeOverlay"></div>
 
 <h1>The Test of Sequence</h1>
 
@@ -174,7 +204,7 @@ button.enter:hover {
 
     <img src="images/room.png" alt="The chamber">
 
-    <!-- PINK COUNTER ABOVE CRYSTAL -->
+    <!-- CRYSTAL COUNTER -->
 
     <div id="crystalCounter" aria-live="polite"></div>
 
@@ -288,6 +318,9 @@ const correctOrder = [6, 4, 3, 1, 5, 2];
 let selected = [];
 let activeDoor = null;
 let puzzleComplete = false;
+let transitioning = false;
+
+let counterTimer = null;
 
 const roomView = document.getElementById("roomView");
 const panel = document.getElementById("panel");
@@ -302,6 +335,9 @@ const successMessage =
 
 const doorReturn =
   document.getElementById("doorReturn");
+
+const fadeOverlay =
+  document.getElementById("fadeOverlay");
 
 // ==================================================
 // DOOR CLICK HANDLERS
@@ -321,7 +357,11 @@ document.querySelectorAll(".door").forEach(button => {
 
 function openDoor(number) {
 
-  if (puzzleComplete) return;
+  if (puzzleComplete || transitioning) return;
+
+  // Stop previous counter timer
+  clearTimeout(counterTimer);
+  crystalCounter.classList.remove("visible");
 
   activeDoor = number;
 
@@ -343,10 +383,10 @@ function openDoor(number) {
 
 function showMemory() {
 
+  if (transitioning) return;
+
   doorView.hidden = true;
   memoryView.hidden = false;
-
-  // Hide duplicate return button
   doorReturn.hidden = true;
 
   document.getElementById("memoryImage").src =
@@ -355,13 +395,62 @@ function showMemory() {
 }
 
 // ==================================================
-// RETURN TO ROOM WITHOUT SELECTING
+// DISPLAY COUNTER FOR SIX SECONDS
 // ==================================================
 
-function showRoom() {
+function displayCounter(text) {
 
-  roomView.hidden = false;
-  panel.hidden = true;
+  // Cancel any previous timer
+  clearTimeout(counterTimer);
+
+  crystalCounter.textContent = text;
+
+  // Force visible
+  crystalCounter.classList.add("visible");
+
+  // Fade out after six seconds
+  counterTimer = setTimeout(() => {
+
+    crystalCounter.classList.remove("visible");
+
+  }, 6000);
+
+}
+
+// ==================================================
+// FADE BACK TO MAIN ROOM
+// ==================================================
+
+function showRoom(counterText = null) {
+
+  if (transitioning) return;
+
+  transitioning = true;
+
+  // Fade to black
+  fadeOverlay.classList.add("active");
+
+  setTimeout(() => {
+
+    // Switch to the main room
+    roomView.hidden = false;
+    panel.hidden = true;
+
+    // Fade back in
+    fadeOverlay.classList.remove("active");
+
+    setTimeout(() => {
+
+      transitioning = false;
+
+      // Only display a counter if a door was entered
+      if (typeof counterText === "string") {
+        displayCounter(counterText);
+      }
+
+    }, 600);
+
+  }, 600);
 
 }
 
@@ -371,10 +460,11 @@ function showRoom() {
 
 function enterDoor() {
 
-  if (puzzleComplete) return;
+  if (puzzleComplete || transitioning) return;
 
-  // Check whether this is the next correct door
   const expectedDoor = correctOrder[selected.length];
+
+  let counterText;
 
   if (activeDoor === expectedDoor) {
 
@@ -382,15 +472,15 @@ function enterDoor() {
 
     selected.push(activeDoor);
 
-    crystalCounter.textContent =
-      `${selected.length}/6`;
+    counterText = `${selected.length}/6`;
 
-    // Check for full completion
+    // ALL SIX CORRECT
+
     if (selected.length === 6) {
 
       puzzleComplete = true;
 
-      crystalCounter.textContent = "6/6";
+      counterText = "6/6";
 
       successMessage.hidden = false;
 
@@ -405,12 +495,12 @@ function enterDoor() {
 
     selected = [];
 
-    crystalCounter.textContent = "Recall... 0/6";
+    counterText = "Recall... 0/6";
 
   }
 
-  // Always return to the main room
-  showRoom();
+  // Fade back to chamber and show result
+  showRoom(counterText);
 
 }
 
