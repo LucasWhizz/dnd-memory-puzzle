@@ -29,6 +29,8 @@ p {
   line-height: 1.5;
 }
 
+/* MAIN ROOM */
+
 #map {
   position: relative;
   width: min(95vw, 750px);
@@ -39,6 +41,8 @@ p {
   display: block;
   width: 100%;
 }
+
+/* CLICKABLE DOORS */
 
 .door {
   position: absolute;
@@ -57,10 +61,29 @@ p {
   outline: none;
 }
 
-.door.selected {
-  border-color: #79d4ff;
-  background: #60bfff44;
+/* CRYSTAL COUNTER */
+
+#crystalCounter {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  transform: translate(-50%, -50%);
+
+  color: #ff9aeb;
+  font-size: clamp(18px, 3vw, 30px);
+  font-weight: bold;
+
+  text-shadow:
+    0 0 6px #ff69db,
+    0 0 15px #f049d5,
+    0 0 25px #e038cc;
+
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
 }
+
+/* DOOR / MEMORY SCREEN */
 
 #panel {
   max-width: 750px;
@@ -75,6 +98,8 @@ p {
   margin: 15px auto;
   object-fit: contain;
 }
+
+/* CLICKABLE SYMBOL IMAGE */
 
 #symbolButton {
   display: block;
@@ -91,17 +116,7 @@ p {
   margin: 0;
 }
 
-#symbolButton::after {
-  content: "✧";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 48px;
-  color: #f3b2ff;
-  text-shadow: 0 0 18px #fa8cff;
-  pointer-events: none;
-}
+/* BUTTONS */
 
 button.action {
   background: #352044;
@@ -118,13 +133,28 @@ button.action:hover {
   background: #573267;
 }
 
+button.enter {
+  background: #60316e;
+  border-color: #e4a0f1;
+}
+
+button.enter:hover {
+  background: #854397;
+}
+
+/* SUCCESS MESSAGE */
+
+#successMessage {
+  color: #f2b5ff;
+  font-size: 22px;
+  text-shadow: 0 0 12px #e86bfa;
+  margin: 20px auto;
+}
+
 [hidden] {
   display: none !important;
 }
-#message {
-  color: #e6b9ec;
-  min-height: 24px;
-}
+
 </style>
 </head>
 
@@ -136,7 +166,7 @@ button.action:hover {
   Retrace your journey, and tell your story.
 </p>
 
-<!-- MAIN CHAMBER -->
+<!-- MAIN ROOM -->
 
 <section id="roomView">
 
@@ -144,7 +174,11 @@ button.action:hover {
 
     <img src="images/room.png" alt="The chamber">
 
-    <!-- LEFT SIDE: BOTTOM TO TOP -->
+    <!-- PINK COUNTER ABOVE CRYSTAL -->
+
+    <div id="crystalCounter" aria-live="polite"></div>
+
+    <!-- LEFT SIDE -->
 
     <!-- Door 1: Bottom Left -->
     <button class="door" data-door="1"
@@ -161,7 +195,7 @@ button.action:hover {
       style="left:8%;top:25%"
       aria-label="Top left door"></button>
 
-    <!-- RIGHT SIDE: TOP TO BOTTOM -->
+    <!-- RIGHT SIDE -->
 
     <!-- Door 4: Top Right -->
     <button class="door" data-door="4"
@@ -180,19 +214,17 @@ button.action:hover {
 
   </div>
 
-  <p id="progress">Sequence: 0 / 6</p>
-
-  <p id="message" aria-live="polite"></p>
-
-  <button class="action" onclick="resetPuzzle()">
-    Reset sequence
-  </button>
+  <div id="successMessage" hidden>
+    Presence of mind confirmed. Access granted.
+  </div>
 
 </section>
 
-<!-- DOOR AND MEMORY VIEWS -->
+<!-- DOOR AND MEMORY SCREENS -->
 
 <section id="panel" hidden>
+
+  <!-- DOOR IMAGE -->
 
   <div id="doorView">
 
@@ -212,6 +244,8 @@ button.action:hover {
 
   </div>
 
+  <!-- MEMORY IMAGE -->
+
   <div id="memoryView" hidden>
 
     <h2>A Vision</h2>
@@ -219,34 +253,31 @@ button.action:hover {
     <img id="memoryImage"
       alt="A vision from the party's journey">
 
-    <button class="action" onclick="chooseDoor()">
-      Choose this door
+    <button class="action enter" onclick="enterDoor()">
+      Enter the Door
+    </button>
+
+    <button class="action" onclick="showRoom()">
+      Return to Room
     </button>
 
   </div>
 
-  <button class="action" onclick="showRoom()">
-    Return to chamber
-  </button>
+  <!-- RETURN BUTTON FOR DOOR VIEW -->
+
+  <div id="doorReturn">
+    <button class="action" onclick="showRoom()">
+      Return to Room
+    </button>
+  </div>
 
 </section>
 
 <script>
 
 // ==================================================
-// PUZZLE SETTINGS
+// CORRECT SEQUENCE
 // ==================================================
-
-// Change this array to the correct reverse-chronological
-// order of the six memories.
-//
-// Door positions:
-// 1 = Bottom Left
-// 2 = Middle Left
-// 3 = Top Left
-// 4 = Top Right
-// 5 = Middle Right
-// 6 = Bottom Right
 
 const correctOrder = [6, 4, 3, 1, 5, 2];
 
@@ -262,7 +293,15 @@ const roomView = document.getElementById("roomView");
 const panel = document.getElementById("panel");
 const doorView = document.getElementById("doorView");
 const memoryView = document.getElementById("memoryView");
-const message = document.getElementById("message");
+
+const crystalCounter =
+  document.getElementById("crystalCounter");
+
+const successMessage =
+  document.getElementById("successMessage");
+
+const doorReturn =
+  document.getElementById("doorReturn");
 
 // ==================================================
 // DOOR CLICK HANDLERS
@@ -271,18 +310,18 @@ const message = document.getElementById("message");
 document.querySelectorAll(".door").forEach(button => {
 
   button.addEventListener("click", () => {
-
     openDoor(Number(button.dataset.door));
-
   });
 
 });
 
 // ==================================================
-// OPEN A DOOR
+// OPEN DOOR IMAGE
 // ==================================================
 
 function openDoor(number) {
+
+  if (puzzleComplete) return;
 
   activeDoor = number;
 
@@ -291,6 +330,7 @@ function openDoor(number) {
 
   doorView.hidden = false;
   memoryView.hidden = true;
+  doorReturn.hidden = false;
 
   document.getElementById("doorImage").src =
     `images/door${number}.png`;
@@ -298,7 +338,7 @@ function openDoor(number) {
 }
 
 // ==================================================
-// REVEAL MEMORY
+// SHOW MEMORY
 // ==================================================
 
 function showMemory() {
@@ -306,13 +346,16 @@ function showMemory() {
   doorView.hidden = true;
   memoryView.hidden = false;
 
+  // Hide duplicate return button
+  doorReturn.hidden = true;
+
   document.getElementById("memoryImage").src =
     `images/memory${activeDoor}.png`;
 
 }
 
 // ==================================================
-// RETURN TO MAIN ROOM
+// RETURN TO ROOM WITHOUT SELECTING
 // ==================================================
 
 function showRoom() {
@@ -323,94 +366,51 @@ function showRoom() {
 }
 
 // ==================================================
-// SELECT A DOOR
+// ENTER THE SELECTED DOOR
 // ==================================================
 
-function chooseDoor() {
+function enterDoor() {
 
-  showRoom();
+  if (puzzleComplete) return;
 
-  if (puzzleComplete) {
-    return;
-  }
+  // Check whether this is the next correct door
+  const expectedDoor = correctOrder[selected.length];
 
-  if (selected.includes(activeDoor)) {
+  if (activeDoor === expectedDoor) {
 
-    message.textContent =
-      "This memory has already been chosen.";
-
-    return;
-
-  }
-
-  if (activeDoor !== correctOrder[selected.length]) {
-
-    selected = [];
-
-    message.textContent =
-      "The crystal flickers. The sequence is broken. Begin again.";
-
-  } else {
+    // CORRECT DOOR
 
     selected.push(activeDoor);
 
-    message.textContent =
-      "The crystal pulses with blue light.";
+    crystalCounter.textContent =
+      `${selected.length}/6`;
+
+    // Check for full completion
+    if (selected.length === 6) {
+
+      puzzleComplete = true;
+
+      crystalCounter.textContent = "6/6";
+
+      successMessage.hidden = false;
+
+      document.getElementById("instruction").textContent =
+        "The great metal door unlocks with a thunderous click.";
+
+    }
+
+  } else {
+
+    // INCORRECT DOOR
+
+    selected = [];
+
+    crystalCounter.textContent = "Recall... 0/6";
 
   }
 
-  updateMap();
-
-  if (selected.length === 6) {
-
-    puzzleComplete = true;
-
-    message.textContent =
-      "Presence of mind confirmed. Access granted.";
-
-    document.getElementById("instruction").textContent =
-      "The great metal door unlocks with a thunderous click.";
-
-  }
-
-}
-
-// ==================================================
-// UPDATE SELECTED DOORS
-// ==================================================
-
-function updateMap() {
-
-  document.getElementById("progress").textContent =
-    `Sequence: ${selected.length} / 6`;
-
-  document.querySelectorAll(".door").forEach(button => {
-
-    button.classList.toggle(
-      "selected",
-      selected.includes(Number(button.dataset.door))
-    );
-
-  });
-
-}
-
-// ==================================================
-// RESET PUZZLE
-// ==================================================
-
-function resetPuzzle() {
-
-  selected = [];
-  activeDoor = null;
-  puzzleComplete = false;
-
-  message.textContent = "";
-
-  document.getElementById("instruction").textContent =
-    "Retrace your journey, and tell your story.";
-
-  updateMap();
+  // Always return to the main room
+  showRoom();
 
 }
 
