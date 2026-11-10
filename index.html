@@ -129,30 +129,73 @@ p {
   margin: 0;
 }
 
-/* ACTION BUTTONS */
+/* FANTASY BUTTONS */
 
-button.action {
-  background: #352044;
-  border: 1px solid #b97bcb;
-  border-radius: 7px;
-  color: white;
-  padding: 12px 20px;
-  margin: 8px;
+button.fantasy-button {
+  display: inline-block;
+  margin: 20px 8px;
+  padding: 13px 30px;
+
+  background: linear-gradient(
+    180deg,
+    #513725 0%,
+    #302016 50%,
+    #21150f 100%
+  );
+
+  color: #f0d5a0;
+  border: 2px solid #b89253;
+  border-radius: 5px;
+
+  box-shadow:
+    inset 0 0 0 2px #28190f,
+    inset 0 2px 8px #8b603b,
+    0 5px 15px #0009;
+
+  font-family: Georgia, serif;
+  font-size: 19px;
+  font-variant: small-caps;
+  letter-spacing: 2px;
+
+  text-shadow: 1px 1px 3px #000;
   cursor: pointer;
-  font: inherit;
+
+  transition:
+    box-shadow 0.3s ease,
+    background 0.3s ease,
+    transform 0.3s ease;
 }
 
-button.action:hover {
-  background: #573267;
+button.fantasy-button::before {
+  content: "❧";
+  margin-right: 12px;
+  color: #d5ad69;
 }
 
-button.enter {
-  background: #60316e;
-  border-color: #e4a0f1;
+button.fantasy-button::after {
+  content: "❧";
+  margin-left: 12px;
+  color: #d5ad69;
 }
 
-button.enter:hover {
-  background: #854397;
+button.fantasy-button:hover {
+  background: linear-gradient(
+    180deg,
+    #6d4b30,
+    #402b1b,
+    #302016
+  );
+
+  box-shadow:
+    inset 0 0 0 2px #28190f,
+    0 0 16px #d5a65c88,
+    0 5px 15px #0009;
+
+  transform: translateY(-2px);
+}
+
+button.fantasy-button:active {
+  transform: translateY(1px);
 }
 
 /* SUCCESS MESSAGE */
@@ -278,12 +321,12 @@ button.enter:hover {
     <img id="memoryImage"
       alt="A vision from the party's journey">
 
-    <button class="action enter" onclick="enterDoor()">
+    <button class="fantasy-button" onclick="enterDoor()">
       Enter the Door
     </button>
 
-    <button class="action" onclick="showRoom()">
-      Return to Room
+    <button class="fantasy-button" onclick="showRoom()">
+      Return
     </button>
 
   </div>
@@ -291,8 +334,8 @@ button.enter:hover {
   <!-- RETURN BUTTON FOR DOOR VIEW -->
 
   <div id="doorReturn">
-    <button class="action" onclick="showRoom()">
-      Return to Room
+    <button class="fantasy-button" onclick="showRoom()">
+      Return
     </button>
   </div>
 
