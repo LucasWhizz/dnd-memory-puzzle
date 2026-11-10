@@ -23,11 +23,6 @@ body {
   text-align: center;
 }
 
-h1 {
-  color: #e6b9ec;
-  margin: 20px 0 8px;
-}
-
 p {
   line-height: 1.5;
 }
@@ -109,7 +104,16 @@ p {
   object-fit: contain;
 }
 
-/* CLICKABLE SYMBOL */
+/* DOOR DESCRIPTION */
+
+#doorDescription {
+  color: #f0d8f4;
+  font-size: 21px;
+  margin: 18px auto;
+  line-height: 1.6;
+}
+
+/* CLICKABLE DOOR IMAGE */
 
 #symbolButton {
   display: block;
@@ -190,12 +194,6 @@ button.enter:hover {
 
 <div id="fadeOverlay"></div>
 
-<h1>The Test of Sequence</h1>
-
-<p id="instruction">
-  Retrace your journey, and tell your story.
-</p>
-
 <!-- MAIN ROOM -->
 
 <section id="roomView">
@@ -258,19 +256,16 @@ button.enter:hover {
 
   <div id="doorView">
 
-    <h2>A Door of Memory</h2>
-
-    <p>A strange symbol glows upon the door.</p>
+    <p id="doorDescription"></p>
 
     <button id="symbolButton"
       onclick="showMemory()"
-      aria-label="Touch the glowing symbol">
+      aria-label="Touch the symbol to reveal the memory">
 
-      <img id="doorImage" alt="A mysterious door">
+      <img id="doorImage"
+        alt="A wooden door with an engraved symbol">
 
     </button>
-
-    <p>Touch the symbol to reveal what lies beyond.</p>
 
   </div>
 
@@ -312,6 +307,26 @@ button.enter:hover {
 const correctOrder = [6, 4, 3, 1, 5, 2];
 
 // ==================================================
+// DOOR DESCRIPTIONS
+// ==================================================
+
+const doorDescriptions = {
+
+  1: "A wooden door with the symbol of a Tigers Head. Do you remember?",
+
+  2: "A wooden door with the symbol of a Robotic Arm. Do you remember?",
+
+  3: "A wooden door with the symbol of a Bow. Do you remember?",
+
+  4: "A wooden door with the symbol of a Bear. Do you remember?",
+
+  5: "A wooden door with the symbol of a PickAxe. Do you remember?",
+
+  6: "A wooden door with the symbol of a Crystal. Do you remember?"
+
+};
+
+// ==================================================
 // PUZZLE STATE
 // ==================================================
 
@@ -319,7 +334,6 @@ let selected = [];
 let activeDoor = null;
 let puzzleComplete = false;
 let transitioning = false;
-
 let counterTimer = null;
 
 const roomView = document.getElementById("roomView");
@@ -359,7 +373,6 @@ function openDoor(number) {
 
   if (puzzleComplete || transitioning) return;
 
-  // Stop previous counter timer
   clearTimeout(counterTimer);
   crystalCounter.classList.remove("visible");
 
@@ -371,6 +384,9 @@ function openDoor(number) {
   doorView.hidden = false;
   memoryView.hidden = true;
   doorReturn.hidden = false;
+
+  document.getElementById("doorDescription").textContent =
+    doorDescriptions[number];
 
   document.getElementById("doorImage").src =
     `images/door${number}.png`;
@@ -400,19 +416,14 @@ function showMemory() {
 
 function displayCounter(text) {
 
-  // Cancel any previous timer
   clearTimeout(counterTimer);
 
   crystalCounter.textContent = text;
 
-  // Force visible
   crystalCounter.classList.add("visible");
 
-  // Fade out after six seconds
   counterTimer = setTimeout(() => {
-
     crystalCounter.classList.remove("visible");
-
   }, 6000);
 
 }
@@ -427,23 +438,19 @@ function showRoom(counterText = null) {
 
   transitioning = true;
 
-  // Fade to black
   fadeOverlay.classList.add("active");
 
   setTimeout(() => {
 
-    // Switch to the main room
     roomView.hidden = false;
     panel.hidden = true;
 
-    // Fade back in
     fadeOverlay.classList.remove("active");
 
     setTimeout(() => {
 
       transitioning = false;
 
-      // Only display a counter if a door was entered
       if (typeof counterText === "string") {
         displayCounter(counterText);
       }
@@ -468,13 +475,9 @@ function enterDoor() {
 
   if (activeDoor === expectedDoor) {
 
-    // CORRECT DOOR
-
     selected.push(activeDoor);
 
     counterText = `${selected.length}/6`;
-
-    // ALL SIX CORRECT
 
     if (selected.length === 6) {
 
@@ -484,14 +487,9 @@ function enterDoor() {
 
       successMessage.hidden = false;
 
-      document.getElementById("instruction").textContent =
-        "The great metal door unlocks with a thunderous click.";
-
     }
 
   } else {
-
-    // INCORRECT DOOR
 
     selected = [];
 
@@ -499,7 +497,6 @@ function enterDoor() {
 
   }
 
-  // Fade back to chamber and show result
   showRoom(counterText);
 
 }
